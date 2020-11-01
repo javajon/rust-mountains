@@ -1,0 +1,13 @@
+FROM node:14 AS build
+WORKDIR /usr/src/app
+COPY mountains.proto ./
+COPY server/package*.json ./
+COPY server/src/ ./
+RUN ["npm", "install", "--production"]
+
+FROM gcr.io/distroless/nodejs:14
+WORKDIR /app
+COPY --from=build /usr/src/app ./
+EXPOSE 8321
+CMD ["server.js"]
+    
