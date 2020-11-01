@@ -1,12 +1,26 @@
-FROM node:14 AS build
-WORKDIR /usr/src/app
-COPY mountains.proto ./
-COPY server/package*.json ./
-COPY server/src/ ./
-RUN ["npm", "install"]
+# 1: Build the exe
+FROM rust:1.47 as builder
+WORKDIR /usr/src
 
-FROM gcr.io/distroless/nodejs:14
-WORKDIR /app
-COPY --from=build /usr/src/app ./
-EXPOSE 8321
-CMD ["start"]
+# 1a: Prepare for static linking
+RUN apt-get update && \
+    apt-get dist-upgrade -y && \
+    apt-get install -y musl-tools && \
+    rustup target add x86_64-unknown-linux-musl
+
+# 1b: Download and compile Rust dependencies (and store as a separate Docker layer)
+RUN USER=root cargo new server
+WORKDIR /usr/src/server
+COPY Cargo.toml Cargo.lock ./
+RUN cargo install --target x86_64-unknown-linux-musl --path .
+
+# 1c: Build the exe using the actual source code
+COPY server/src ./src
+RUN cargo install --target x86_64-unknown-linux-musl --path .
+
+# 2: Copy the exe and extra files ("static") to an empty Docker image
+FROM scratch
+COPY --from=builder /usr/local/cargo/bin/server .
+COPY static .
+USER 1000
+CMD ["./server"]
