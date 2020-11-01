@@ -14,7 +14,7 @@ path = "src/mountains_server.rs"
 prost = "0.6.1"
 tonic = {version="0.3.1", features = ["tls"]}
 tokio = { version = "0.2", features = ["rt-threaded", "time", "stream", "fs", "macros", "uds"] }
-futures = { version = "0.3.0", default-features = false, features = ["alloc"] }
+futures = { version = "0.3.7", default-features = false, features = ["alloc"] }
 
 [build-dependencies]
 tonic-build = "0.3.1"
