@@ -1,6 +1,8 @@
 syntax = "proto3";
 
-service MountainService {
+package mountains;
+
+service Mountains {
     rpc GetAll (Empty) returns (MountainList) {}
     rpc Get (MountainRequestId) returns (Mountain) {}
     rpc Insert (Mountain) returns (Mountain) {}
