@@ -1,26 +1,28 @@
-# 1: Build the exe
-FROM rust:1.47 as builder
-WORKDIR /usr/src
+FROM rust as planner
+WORKDIR app
+# We only pay the installation cost once, 
+# it will be cached from the second build onwards
+# To ensure a reproducible build consider pinning 
+# the cargo-chef version with `--version X.X.X`
+RUN cargo install cargo-chef 
+COPY server/ .
+RUN cargo chef prepare  --recipe-path recipe.json
 
-# 1a: Prepare for static linking
-RUN apt-get update && \
-    apt-get dist-upgrade -y && \
-    apt-get install -y musl-tools && \
-    rustup target add x86_64-unknown-linux-musl
+FROM rust as cacher
+WORKDIR app
+RUN cargo install cargo-chef
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
 
-# 1b: Download and compile Rust dependencies (and store as a separate Docker layer)
-RUN USER=root cargo new server
-WORKDIR /usr/src/server
-COPY server/Cargo.toml server/Cargo.lock ./
-RUN cargo install --target x86_64-unknown-linux-musl --path .
+FROM rust as builder
+WORKDIR app
+COPY server/ .
+# Copy over the cached dependencies
+COPY --from=cacher /app/target target
+COPY --from=cacher /usr/local/cargo /usr/local/cargo
+RUN cargo build --release --bin app
 
-# 1c: Build the exe using the actual source code
-COPY server/src ./src
-RUN cargo install --target x86_64-unknown-linux-musl --path .
-
-# 2: Copy the exe and extra files ("static") to an empty Docker image
-FROM scratch
-COPY --from=builder /usr/local/cargo/bin/server .
-COPY static .
-USER 1000
-CMD ["./server"]
+FROM rust as runtime
+WORKDIR app
+COPY --from=builder /app/target/release/app /usr/local/bin
+ENTRYPOINT ["./usr/local/bin/app"]
