@@ -11,8 +11,8 @@ var packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 	arrays: true
 });
 
-const MountainService = grpc.loadPackageDefinition(packageDefinition).MountainService;
-const client = new MountainService(
+const mountains_proto = grpc.loadPackageDefinition(packageDefinition).mountains;
+const client = new mountains_proto.MountainService(
 	MOUNTAINS_SERVER,
 	grpc.credentials.createInsecure()
 );

@@ -31,3 +31,13 @@ Stick with the versions found and tested in: https://github.com/hyperium/tonic
 
 tonic = {version="0.3.1",features = ["tls"]}
 tokio = { version = "0.2", features = ["rt-threaded", "time", "stream", "fs", "macros", "uds"] }
+
+
+
+TODO:
+
+wget https://github.com/fullstorydev/grpcurl/archive/v1.7.0.tar.gz
+tar -zxvf v1.7.0.tar.gz
+cd grpcurl-1.7.0/cmd/grpcurl/
+go build
+ls
