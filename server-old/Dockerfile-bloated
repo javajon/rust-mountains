@@ -1,7 +1,0 @@
-FROM node:14.11.0
-WORKDIR /usr/src/app
-COPY mountains.proto ./
-COPY server/package*.json ./
-COPY server/src/ ./
-RUN npm install
-CMD ["node", "server.js"]

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package mountains;
 
-service Mountains {
+service MountainsService {
     rpc GetAll (Empty) returns (MountainList) {}
     rpc Get (MountainRequestId) returns (Mountain) {}
     rpc Insert (Mountain) returns (Mountain) {}

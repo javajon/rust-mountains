@@ -1,18 +1,18 @@
 use tonic::{transport::Server, Request, Response, Status};
 
-pub mod hills {
+pub mod mountains {
     // The gRPC package name
     tonic::include_proto!("mountains");
 }
 
-use hills::mountains_server::{Mountains, MountainsServer};
-use hills::{Empty, Mountain, MountainList, MountainRequestId};
+use mountains::mountains_service_server::{MountainsService, MountainsServiceServer};
+use mountains::{Empty, Mountain, MountainList, MountainRequestId};
 
 #[derive(Default)]
 pub struct MyMountains {}
 
 #[tonic::async_trait]
-impl Mountains for MyMountains {
+impl MountainsService for MyMountains {
     async fn get_all(
         &self,
         request: Request<Empty>,
@@ -95,13 +95,13 @@ impl Mountains for MyMountains {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = "[::1]:3000".parse().unwrap();
+    let addr = "0.0.0.0:3000".parse().unwrap();
     let mountains = MyMountains::default();
 
-    println!("MountainServiceServer listening on {}", addr);
+    println!("MountainsServiceServer listening on {}", addr);
 
     Server::builder()
-        .add_service(MountainsServer::new(mountains))
+        .add_service(MountainsServiceServer::new(mountains))
         .serve(addr)
         .await?;
 

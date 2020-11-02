@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: mountains-client-$SUFFIX
+  name: mountains-client
 spec:
   ports:
   - name: web
@@ -9,35 +9,35 @@ spec:
     nodePort: 30300
     targetPort: web 
   selector:
-    app: mountains-client-$SUFFIX
+    app: mountains-client
   type: NodePort
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mountains-client-$SUFFIX
+  name: mountains-client
   labels:
-    app: mountains-client-$SUFFIX
+    app: mountains-client
 spec:
   selector:
     matchLabels:
-      app: mountains-client-$SUFFIX
+      app: mountains-client
   replicas: 1
   template:
     metadata:
       labels:
-        app: mountains-client-$SUFFIX
+        app: mountains-client
     spec:
       containers:
-      - name: mountains-client-$SUFFIX
-        image: $REGISTRY/mountains-client-$SUFFIX:0.1.0
+      - name: mountains-client
+        image: $REGISTRY/mountains-client:0.1.0
         imagePullPolicy: Always
         ports:
           - name: web
             containerPort: 3000
         env:
           - name: MOUNTAINS_SERVER
-            value: "mountains-server-$SUFFIX:8321"
+            value: "mountains-server:8321"
           - name: DEBUG
             value: "express:*"
           - name: GRPC_VERBOSITY
