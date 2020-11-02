@@ -30,5 +30,5 @@ RUN cargo build --release
 FROM rust:1.47
 COPY --from=builder /app/target/release/mountains_server .
 USER 1000
-EXPOSE 3000
+EXPOSE 8321
 ENTRYPOINT [ "./mountains_server" ]

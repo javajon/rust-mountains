@@ -6,7 +6,7 @@ metadata:
   name: mountains-server
 spec:
   ports:
-  - port: 3000
+  - port: 8321
     targetPort: grpc
   selector:
     app: mountains-server
@@ -33,7 +33,7 @@ spec:
         imagePullPolicy: Always
         ports:
           - name: grpc
-            containerPort: 3000
+            containerPort: 8321
         env:
           - name: GRPC_VERBOSITY
             value: "INFO"

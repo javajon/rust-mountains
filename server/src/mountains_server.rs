@@ -95,7 +95,7 @@ impl MountainService for MyMountains {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = "0.0.0.0:3000".parse().unwrap();
+    let addr = "0.0.0.0:8321".parse().unwrap();
     let mountains = MyMountains::default();
 
     println!("MountainServiceServer listening on {}", addr);
