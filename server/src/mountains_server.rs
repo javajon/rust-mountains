@@ -5,14 +5,14 @@ pub mod mountains {
     tonic::include_proto!("mountains");
 }
 
-use mountains::mountains_service_server::{MountainsService, MountainsServiceServer};
+use mountains::mountain_service_server::{MountainService, MountainServiceServer};
 use mountains::{Empty, Mountain, MountainList, MountainRequestId};
 
 #[derive(Default)]
 pub struct MyMountains {}
 
 #[tonic::async_trait]
-impl MountainsService for MyMountains {
+impl MountainService for MyMountains {
     async fn get_all(
         &self,
         request: Request<Empty>,
@@ -98,10 +98,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = "0.0.0.0:3000".parse().unwrap();
     let mountains = MyMountains::default();
 
-    println!("MountainsServiceServer listening on {}", addr);
+    println!("MountainServiceServer listening on {}", addr);
 
     Server::builder()
-        .add_service(MountainsServiceServer::new(mountains))
+        .add_service(MountainServiceServer::new(mountains))
         .serve(addr)
         .await?;
 
