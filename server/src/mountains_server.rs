@@ -1,3 +1,5 @@
+use std::vec::Vec;
+use std::string::ToString;
 use tonic::{transport::Server, Request, Response, Status};
 
 pub mod mountains {
@@ -5,11 +7,16 @@ pub mod mountains {
     tonic::include_proto!("mountains");
 }
 
+mod model;
+use crate::model::*;
+
 use mountains::mountain_service_server::{MountainService, MountainServiceServer};
 use mountains::{Empty, Mountain, MountainList, MountainRequestId};
 
 #[derive(Default)]
-pub struct MyMountains {}
+pub struct MyMountains {
+    mountains_model: Model
+}
 
 #[tonic::async_trait]
 impl MountainService for MyMountains {
@@ -18,17 +25,20 @@ impl MountainService for MyMountains {
         request: Request<Empty>,
     ) -> Result<Response<MountainList>, Status> {
         println!("Got a request: {:#?}", &request);
+        
+        let mut peaks = vec![];
 
-        let hills = [ 
-            Mountain {
-                id: "1".to_string(),
-                name: "todo-name".to_string(),
-                elevation: 33,
-                location: "todo-here".to_string(),       
-            },
-        ];
+        for i in &(self.mountains_model.get_all()) {
+            let m = Mountain {
+                id: i.id.clone(),
+                name: i.name.clone(),
+                elevation: i.elevation,
+                location: i.location.clone()    
+            };
+            peaks.push(m);
+        }
 
-        let reply = MountainList { mountains: hills.to_vec() };
+        let reply = MountainList { mountains: peaks };
 
         Ok(Response::new(reply))
     }
@@ -55,14 +65,16 @@ impl MountainService for MyMountains {
     ) -> Result<Response<Mountain>, Status> {
         println!("Got a request: {:#?}", &request);
 
-        let reply = Mountain {
+        let mountain = Mountain {
             id: "1".to_string(),
             name: "todo-name".to_string(),
             elevation: 33,
             location: "todo-here".to_string(),       
         };
 
-        Ok(Response::new(reply))
+        // self.mountains_model.create(mountain);
+
+        Ok(Response::new(mountain))
     }
 
     async fn update(
@@ -98,7 +110,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = "0.0.0.0:8321".parse().unwrap();
     let mountains = MyMountains::default();
 
-    println!("MountainServiceServer listening on {}", addr);
+    println!("MountainServiceServer listening on {}", addr);   
 
     Server::builder()
         .add_service(MountainServiceServer::new(mountains))
