@@ -28,13 +28,14 @@ impl MountainService for MyMountains {
         
         let mut peaks = vec![];
 
-        for i in &(self.mountains_model.get_all()) {
+        for i in self.mountains_model.get_all() {
             let m = Mountain {
                 id: i.id.clone(),
                 name: i.name.clone(),
                 elevation: i.elevation,
                 location: i.location.clone()    
             };
+            println!("Returning mountain: {:#?}", m.name);
             peaks.push(m);
         }
 
