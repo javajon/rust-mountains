@@ -26,20 +26,29 @@ impl MountainService for MyMountains {
     ) -> Result<Response<MountainList>, Status> {
         println!("Got a request: {:#?}", &request);
         
-        let mut peaks = vec![];
+        // let mut peaks = vec![];
+        // for i in self.mountains_model.get_all() {
+        //     let m = Mountain {
+        //         id: i.id.clone(),
+        //         name: i.name.clone(),
+        //         elevation: i.elevation,
+        //         location: i.location.clone()    
+        //     };
+        //     println!("Returning mountain: {:#?}", m.name);
+        //     peaks.push(m);
+        // }
+        // let reply = MountainList { mountains: peaks };
 
-        for i in self.mountains_model.get_all() {
-            let m = Mountain {
-                id: i.id.clone(),
-                name: i.name.clone(),
-                elevation: i.elevation,
-                location: i.location.clone()    
-            };
-            println!("Returning mountain: {:#?}", m.name);
-            peaks.push(m);
-        }
-
-        let reply = MountainList { mountains: peaks };
+        // Debugging - force in a peak
+        let hills = [ 
+            Mountain {
+                id: "a48a8cce-fba6-11ea-adc1-0242ac120002".to_string(),
+                name: "Flatirons".to_string(),
+                elevation: 2484,
+                location: "39.988_N_105.293_W".to_string()
+            },
+        ];
+        let reply = MountainList { mountains: hills.to_vec() };
 
         Ok(Response::new(reply))
     }
