@@ -1,11 +1,11 @@
-FROM node:14 AS build
+FROM node:16 AS build
 WORKDIR /usr/src/app
 COPY mountains.proto ./
 COPY client/package*.json ./
 COPY client/src/ ./
 RUN ["npm", "install", "--production"]
 
-FROM gcr.io/distroless/nodejs:14
+FROM gcr.io/distroless/nodejs:16
 WORKDIR /app
 COPY --from=build /usr/src/app ./
 USER 1000
