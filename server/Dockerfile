@@ -9,7 +9,7 @@ RUN cargo chef prepare --recipe-path recipe.json
 
 # ---
 # Pay dependency cost once, will be cached from second build onwards
-FROM rust:1.5961.0 as cacher
+FROM rust:1.61.0 as cacher
 WORKDIR app
 RUN cargo install cargo-chef
 COPY --from=prepper /app/recipe.json recipe.json
