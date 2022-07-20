@@ -1,5 +1,7 @@
 # Exploring Node.js Microservice application with gRPC
 
+This [O'Reilly Lab](https://www.dijure.com/learning.oreilly.com/scenarios/-/9781492090151/) references this repo.
+
 This project is separated into two parts:
 
 - Server: where gRPC serves the remote calls defined in the proto file
