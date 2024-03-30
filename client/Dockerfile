@@ -3,7 +3,7 @@ WORKDIR /usr/src/app
 COPY mountains.proto ./
 COPY client/package*.json ./
 COPY client/src/ ./
-RUN ["npm", "install", "--production"]
+RUN ["npm", "install", "--omit=dev"]
 
 FROM gcr.io/distroless/nodejs:20
 WORKDIR /app
