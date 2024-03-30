@@ -1,7 +1,6 @@
 # Prepare recipe with cargo chef. Pay installation cost once, will be cached from second build onwards
 # https://github.com/LukeMathWalker/cargo-chef
 # https://www.lpalmieri.com/posts/fast-rust-docker-builds/
-
 # https://medium.com/@eng.fernandosilva/multi-stage-docker-build-for-rust-using-custom-ubuntu-images-distro-less-way-2710465172c7
 
 ARG workdir=/usr/local/src
@@ -22,6 +21,7 @@ RUN chisel cut --release ubuntu-22.04 --root /rootfs \
     libc6_libs
 
 FROM rust:1.77.0 as prepper
+ARG workdir
 WORKDIR ${workdir}
 RUN cargo install cargo-chef
 COPY . .
@@ -30,6 +30,7 @@ RUN cargo chef prepare --recipe-path recipe.json
 # ---
 # Pay dependency cost once, will be cached from second build onwards
 FROM rust:1.77.0 as cacher
+ARG workdir
 WORKDIR ${workdir}
 RUN cargo install cargo-chef
 COPY --from=prepper ${workdir}/recipe.json recipe.json
@@ -38,7 +39,9 @@ RUN cargo chef cook --release --recipe-path recipe.json
 # ---
 # Copy cached dependencies, load source and build
 FROM rust:1.77.0 as builder
+ARG workdir
 WORKDIR ${workdir}
+RUN rustup component add rustfmt
 COPY . .
 COPY --from=cacher ${workdir}/target target
 COPY --from=cacher $CARGO_HOME $CARGO_HOME
@@ -47,6 +50,7 @@ RUN cargo build --release
 # ---
 # Final distillation
 FROM scratch
+ARG workdir
 COPY --from=os /rootfs /
 COPY --from=builder ${workdir}/target/release/mountains_server .
 EXPOSE 8321
