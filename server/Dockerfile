@@ -3,7 +3,7 @@
 # https://www.lpalmieri.com/posts/fast-rust-docker-builds/
 FROM rust:1.77.0 as prepper
 WORKDIR app
-RUN cargo install cargo-chef --version 0.1.66
+RUN cargo install cargo-chef
 COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 
@@ -11,7 +11,7 @@ RUN cargo chef prepare --recipe-path recipe.json
 # Pay dependency cost once, will be cached from second build onwards
 FROM rust:1.77.0 as cacher
 WORKDIR app
-RUN cargo install cargo-chef  --version 0.1.66
+RUN cargo install cargo-chef
 COPY --from=prepper /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 
@@ -23,11 +23,11 @@ RUN rustup component add rustfmt
 COPY . .
 COPY --from=cacher /app/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
-RUN cargo rustc -- -Awarnings && cargo build --release
+RUN cargo build --release
 
 # ---
 # Final distillation
-FROM gcr.io/distroless/base-debian12
+FROM scratch
 COPY --from=builder /app/target/release/mountains_server .
 EXPOSE 8321
 ENTRYPOINT [ "./mountains_server" ]
