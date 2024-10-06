@@ -5,7 +5,7 @@ COPY client/package*.json ./
 COPY client/src/ ./
 RUN ["npm", "install", "--omit=dev"]
 
-FROM gcr.io/distroless/nodejs:22
+FROM gcr.io/distroless/nodejs22-debian12
 WORKDIR /app
 COPY --from=build /usr/src/app ./
 USER 1000
