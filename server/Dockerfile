@@ -5,7 +5,7 @@
 
 ARG workdir=/usr/local/src
 
-FROM ubuntu:24.10 as os
+FROM ubuntu:24.04 as os
 RUN apt-get update && apt-get update && apt-get install -y wget
 WORKDIR /tmp
 RUN wget https://go.dev/dl/go1.23.2.linux-amd64.tar.gz
@@ -13,7 +13,7 @@ RUN tar -xvf go1.23.2.linux-amd64.tar.gz
 RUN mv go /usr/local
 RUN GOBIN=/usr/local/bin/ /usr/local/go/bin/go install github.com/canonical/chisel/cmd/chisel@latest
 WORKDIR /rootfs
-RUN chisel cut --release ubuntu-24.10 --root /rootfs \
+RUN chisel cut --release ubuntu-24.04 --root /rootfs \
     base-files_base \
     base-files_release-info \
     ca-certificates_data \
