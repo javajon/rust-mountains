@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: mountains-client
-        image: $REGISTRY/mountains-client:0.1.0
+        image: $REGISTRY/mountains-client:0.2.0
         imagePullPolicy: Always
         ports:
           - name: web
