@@ -5,22 +5,22 @@
 
 ARG workdir=/usr/local/src
 
-FROM ubuntu:22.04 as os
+FROM ubuntu:24.10 as os
 RUN apt-get update && apt-get update && apt-get install -y wget
 WORKDIR /tmp
-RUN wget https://go.dev/dl/go1.21.1.linux-amd64.tar.gz
-RUN tar -xvf go1.21.1.linux-amd64.tar.gz
+RUN wget https://go.dev/dl/go1.23.2.linux-amd64.tar.gz
+RUN tar -xvf go1.23.2.linux-amd64.tar.gz
 RUN mv go /usr/local
 RUN GOBIN=/usr/local/bin/ /usr/local/go/bin/go install github.com/canonical/chisel/cmd/chisel@latest
 WORKDIR /rootfs
-RUN chisel cut --release ubuntu-22.04 --root /rootfs \
+RUN chisel cut --release ubuntu-24.10 --root /rootfs \
     base-files_base \
     base-files_release-info \
     ca-certificates_data \
     libgcc-s1_libs \
     libc6_libs
 
-FROM rust:1.77.0 as prepper
+FROM rust:1.81.0 as prepper
 ARG workdir
 WORKDIR ${workdir}
 RUN cargo install cargo-chef
@@ -29,7 +29,7 @@ RUN cargo chef prepare --recipe-path recipe.json
 
 # ---
 # Pay dependency cost once, will be cached from second build onwards
-FROM rust:1.77.0 as cacher
+FROM rust:1.81.0 as cacher
 ARG workdir
 WORKDIR ${workdir}
 RUN cargo install cargo-chef
@@ -38,7 +38,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 
 # ---
 # Copy cached dependencies, load source and build
-FROM rust:1.77.0 as builder
+FROM rust:1.81.0 as builder
 ARG workdir
 WORKDIR ${workdir}
 RUN rustup component add rustfmt
