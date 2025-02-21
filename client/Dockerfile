@@ -1,13 +1,13 @@
-FROM node:22 AS build
-WORKDIR /usr/src/app
-COPY mountains.proto ./
+FROM node:23 AS build
+WORKDIR /app
 COPY client/package*.json ./
-COPY client/src/ ./
-RUN ["npm", "install", "--omit=dev"]
+RUN npm install --omit=dev
+COPY mountains.proto ./
+COPY client/src/ ./src/
 
 FROM gcr.io/distroless/nodejs22-debian12
 WORKDIR /app
-COPY --from=build /usr/src/app ./
+COPY --from=build /app ./
 USER 1000
 EXPOSE 3000
-CMD ["index.js"]
+CMD ["src/index.js"]
