@@ -5,7 +5,7 @@
 
 ARG RUST_VERSION=1.85.0
 ARG GOLANG_VERSION=1.24.0
-ARG CHISEL_VERSION=v1.1.9
+ARG CHISEL_VERSION=v1.1.0
 ARG CHEF_VERSION=0.1.71
 ARG UBUNTU_VERSION=24.04
 ARG workdir=/usr/local/src
@@ -14,7 +14,7 @@ ARG CARGO_HOME=/usr/local/cargo
 # --- Base OS with Chisel ---
 FROM golang:${GOLANG_VERSION} AS chisel_builder
 ARG CHISEL_VERSION
-RUN go install github.com/canonical/chisel/cmd/chisel@${CHISEL_VERSION}  # Pin Chisel version
+RUN go install github.com/canonical/chisel/cmd/chisel@${CHISEL_VERSION}
 
 FROM ubuntu:${UBUNTU_VERSION} AS os
 RUN apt-get update && apt-get install -y ca-certificates --no-install-recommends && \
@@ -36,8 +36,9 @@ ARG CHEF_VERSION
 WORKDIR ${workdir}
 RUN cargo install cargo-chef --version ${CHEF_VERSION}
 COPY Cargo.toml ./
+COPY build.rs ./
+COPY proto/ proto/
 COPY src src/
-# Generate Cargo.lock if it doesn't exist
 RUN touch Cargo.lock
 RUN cargo chef prepare --recipe-path recipe.json
 
@@ -49,6 +50,8 @@ ARG CHEF_VERSION
 WORKDIR ${workdir}
 RUN cargo install cargo-chef --version ${CHEF_VERSION}
 COPY --from=prepper ${workdir}/recipe.json recipe.json
+COPY --from=prepper ${workdir}/proto/ proto/
+COPY --from=prepper ${workdir}/build.rs ./
 RUN cargo chef cook --release --recipe-path recipe.json
 
 # --- Build Application ---
@@ -58,9 +61,13 @@ ARG CARGO_HOME
 WORKDIR ${workdir}
 RUN rustup component add rustfmt
 COPY Cargo.toml ./
+COPY build.rs ./
+COPY proto/ proto/
 COPY src src/
 COPY --from=cacher ${workdir}/target target
 COPY --from=cacher ${CARGO_HOME} ${CARGO_HOME}
+# Force rebuild of protos before building
+RUN touch build.rs
 RUN cargo build --release
 
 # --- Final Minimal Image ---
