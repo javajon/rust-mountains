@@ -11,10 +11,11 @@ name = "mountains_server"
 path = "src/mountains_server.rs"
 
 [dependencies]
-prost = "0.6.1"
-tonic = {version="0.3.1", features = ["tls"]}
-tokio = { version = "0.2", features = ["rt-threaded", "time", "stream", "fs", "macros", "uds"] }
-futures = { version = "0.3.7", default-features = false, features = ["alloc"] }
+tonic = "0.14"
+tonic-prost = "0.14"
+prost = "0.14"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
+uuid = { version = "1", features = ["v4"] }
 
 [build-dependencies]
-tonic-build = "0.3.1"
+tonic-prost-build = "0.14"

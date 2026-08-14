@@ -3,10 +3,10 @@
 # https://www.lpalmieri.com/posts/fast-rust-docker-builds/
 # https://medium.com/@eng.fernandosilva/multi-stage-docker-build-for-rust-using-custom-ubuntu-images-distro-less-way-2710465172c7
 
-ARG RUST_VERSION=1.85.0
-ARG GOLANG_VERSION=1.24.0
-ARG CHISEL_VERSION=v1.1.0
-ARG CHEF_VERSION=0.1.71
+ARG RUST_VERSION=1.97.1
+ARG GOLANG_VERSION=1.26.0
+ARG CHISEL_VERSION=v1.4.2
+ARG CHEF_VERSION=0.1.78
 ARG UBUNTU_VERSION=24.04
 ARG workdir=/usr/local/src
 ARG CARGO_HOME=/usr/local/cargo
@@ -33,13 +33,15 @@ RUN chisel cut --release ubuntu-${UBUNTU_VERSION} --root /rootfs \
 FROM rust:${RUST_VERSION} AS prepper
 ARG workdir
 ARG CHEF_VERSION
+# prost 0.14 dropped the bundled protoc, so the build script needs the system one.
+RUN apt-get update && apt-get install -y --no-install-recommends protobuf-compiler && \
+    rm -rf /var/lib/apt/lists/*
 WORKDIR ${workdir}
-RUN cargo install cargo-chef --version ${CHEF_VERSION}
-COPY Cargo.toml ./
-COPY build.rs ./
-COPY proto/ proto/
-COPY src src/
-RUN touch Cargo.lock
+RUN cargo install cargo-chef --locked --version ${CHEF_VERSION}
+COPY server/Cargo.toml server/Cargo.lock ./
+COPY server/build.rs ./
+COPY mountains.proto proto/mountains.proto
+COPY server/src src/
 RUN cargo chef prepare --recipe-path recipe.json
 
 # --- Cache Dependencies ---
@@ -47,8 +49,10 @@ FROM rust:${RUST_VERSION} AS cacher
 ARG workdir
 ARG CARGO_HOME
 ARG CHEF_VERSION
+RUN apt-get update && apt-get install -y --no-install-recommends protobuf-compiler && \
+    rm -rf /var/lib/apt/lists/*
 WORKDIR ${workdir}
-RUN cargo install cargo-chef --version ${CHEF_VERSION}
+RUN cargo install cargo-chef --locked --version ${CHEF_VERSION}
 COPY --from=prepper ${workdir}/recipe.json recipe.json
 COPY --from=prepper ${workdir}/proto/ proto/
 COPY --from=prepper ${workdir}/build.rs ./
@@ -58,12 +62,14 @@ RUN cargo chef cook --release --recipe-path recipe.json
 FROM rust:${RUST_VERSION} AS builder
 ARG workdir
 ARG CARGO_HOME
+RUN apt-get update && apt-get install -y --no-install-recommends protobuf-compiler && \
+    rm -rf /var/lib/apt/lists/*
 WORKDIR ${workdir}
 RUN rustup component add rustfmt
-COPY Cargo.toml ./
-COPY build.rs ./
-COPY proto/ proto/
-COPY src src/
+COPY server/Cargo.toml server/Cargo.lock ./
+COPY server/build.rs ./
+COPY mountains.proto proto/mountains.proto
+COPY server/src src/
 COPY --from=cacher ${workdir}/target target
 COPY --from=cacher ${CARGO_HOME} ${CARGO_HOME}
 # Force rebuild of protos before building

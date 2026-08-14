@@ -1,24 +1,82 @@
-# Exploring Node.js Microservice application with gRPC
+# Exploring a Rust Microservice with gRPC
 
-This [O'Reilly Lab](https://www.dijure.com/learning.oreilly.com/scenarios/-/9781492090151/) references this repo.
+A gRPC service written in Rust, with a Node.js web client, packaged into container images
+and deployed to Kubernetes.
 
-This project is separated into two parts:
+This source code is used by the O'Reilly interactive lab
+[Kubernetes Containers: Rust to Kubernetes](https://learning.oreilly.com/scenarios/~/9781492090151/),
+which builds both container images, pushes them to a private registry, and runs them on a
+Kubernetes cluster. The lab runs in a live cluster provisioned for you in the browser, and
+is available to O'Reilly Learning subscribers as part of the subscription.
 
-- Server: where gRPC serves the remote calls defined in the proto file
-- Client: Express/Node/Bootstrap web page to CRUD the server operations.
+## The two parts
 
-To run this app locally, run the following commands in separate command line windows:
+| part | what it is |
+| --- | --- |
+| `server` | Rust, [tonic](https://github.com/hyperium/tonic) gRPC, serving the contract in `mountains.proto` |
+| `client` | Node.js, Express and Handlebars, calling the server over gRPC |
 
-- Inside the /server folder: `cargo run --bin mountains_server`
-- Inside the /client folder: `npm install && node index`
+Both speak the same contract, `mountains.proto`, which lives once at the repository root.
+Docker's `COPY` cannot reach outside a build context, so both images build **from the
+repository root** rather than from their own directory:
 
-Go to http://localhost:3000/ and try the _Mountains_ application.
+```
+docker image build -t mountains-client:0.1.0 -f client/Dockerfile .
+docker image build -t mountains-server:0.1.0 -f server/Dockerfile .
+```
 
-## Running on Kubernetes
+## The gRPC port
 
-This project includes Dockerfiles to package the client and server into container images. In turn, there is a Katacoda scenario called [Node.js to Kubernetes](https://katacoda.com/javajon/courses/kubernetes-containers) that shows how this application runs on Kubernetes.
+The server listens on **8321**. That number appears in three places and they have to
+agree: `mountains_server.rs`, the `MOUNTAINS_SERVER` default in `client/src/client.js`,
+and the Service and container ports in `kubernetes/mountains-server.yaml`.
+
+## Running locally
+
+Two terminals:
+
+```
+cd server && cargo run --bin mountains_server     # gRPC on :8321
+cd client && npm ci && npm start                  # web on :3000
+```
+
+Then open http://localhost:3000/ and try the Mountains application.
+
+The server needs `protoc` on the build machine: prost 0.14 no longer bundles it.
+On Debian or Ubuntu, `apt-get install protobuf-compiler`.
+
+## Versions are pinned on purpose
+
+Every version here is explicit, and the container images are built from pinned bases:
+
+| pin | version |
+| --- | --- |
+| Rust | 1.97.1 |
+| tonic / tonic-prost / prost | 0.14 |
+| tokio | 1 |
+| cargo-chef | 0.1.78 |
+| chisel | v1.4.2 |
+| Node | 24 |
+| Express | 5 |
+
+`Cargo.lock` and `client/package-lock.json` are **committed**. They used to be in
+`.gitignore`, which meant every build resolved dependencies afresh and could break without
+a single line of this repository changing - and it did: `cargo install cargo-chef` began
+pulling crates that needed a newer compiler than the pinned one.
+
+Bump these deliberately, then re-run the lab's test to confirm nothing broke.
+
+## Deploying
+
+`kubernetes/` holds a Deployment and Service for each part. The image names contain
+`$REGISTRY`, which the lab resolves with `envsubst` before applying:
+
+```
+envsubst < kubernetes/mountains-server.yaml > mountains-server-resolved.yaml
+kubectl apply -f mountains-server-resolved.yaml
+```
 
 ## References
 
-This tutorial was adapted from [LogRocket's article](https://blog.logrocket.com/creating-a-crud-api-with-node-express-and-grpc/).
-
+The client was adapted from
+[LogRocket's article](https://blog.logrocket.com/creating-a-crud-api-with-node-express-and-grpc/).
